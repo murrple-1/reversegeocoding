@@ -228,9 +228,9 @@ private
     db_version = File.mtime(from).strftime('%Y%m%d%H%M%S')
     schema_version = DATABASE_SCHEMA_VERSION
     
-    dict = {"database_version" : "#{db_version}",
-          "schema_version" : "#{schema_version}",
-          "database_level" : "#{level}"
+    dict = {"database_version" => "#{db_version}",
+          "schema_version" => "#{schema_version}",
+          "database_level" => "#{level}"
         }
     
     Plist::Emit.save_plist(dict, to + ".plist")
