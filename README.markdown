@@ -28,7 +28,7 @@ This project tries to leverage the tools include in Mac OS X 10.5, but there
 are some steps you have to do before using this script. So open your Terminal
 and type the following (except the dollar sign):
 
-        $ gem install thor sqlite3 plist
+        $ gem install thor sqlite3 CFPropertyList
 
 After Thor installation you have to install this project Thor script into your
 system:
