@@ -223,15 +223,19 @@ private
   end
   
   def create_plist_file(to, from, level)
-    require 'osx/cocoa'
     
     db_version = File.mtime(from).strftime('%Y%m%d%H%M%S')
     schema_version = DATABASE_SCHEMA_VERSION
     
-    dict = OSX::NSDictionary.dictionaryWithObjects_forKeys(
-      [db_version, schema_version, level],
-      ['database_version', 'schema_version', 'database_level'])
-    dict.writeToFile_atomically(to + ".plist", true)
+    open(to + ".plist", 'wb') do |io|
+      io.write(<<-PLIST)
+      {
+        "database_version" = "#{db_version}";
+        "schema_version" = "#{schema_version}";
+        "database_level" = "#{level}";
+      }
+      PLIST
+    end
   end
   
   def create_header_file(to, from, level)
