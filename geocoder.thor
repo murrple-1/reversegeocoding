@@ -55,7 +55,7 @@ class Geocoder < Thor
       download_code
     else
       task = self.class.tasks['download']
-      puts task.formatted_usage(false)
+      puts task.formatted_usage(self.class, false)
       puts task.description
     end
   end
