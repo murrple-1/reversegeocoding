@@ -28,12 +28,12 @@ This project tries to leverage the tools include in Mac OS X 10.5, but there
 are some steps you have to do before using this script. So open your Terminal
 and type the following (except the dollar sign):
 
-        $ gem install thor sqlite3-ruby fastercsv
+        $ gem install thor sqlite3-ruby
 
 After Thor installation you have to install this project Thor script into your
 system:
 
-        $ thor install http://github.com/drodriguez/reversegeocoding/blob/master/geocoder.thor?raw=true
+        $ thor install https://raw.githubusercontent.com/murrple-1/reversegeocoding/master/geocoder.thor
 
 When asked, you should say “y” to the question “Do you wish to continue?” and
 provide “geocoder” as name for the script in your system.
