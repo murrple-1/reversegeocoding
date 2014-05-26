@@ -62,7 +62,7 @@ class Geocoder < Thor
   
   desc "database", "Read GeoNames database dumps and transforms it into a SQLite database."
   method_options :from => 'cities5000.txt', :to => 'geodata.sqlite', :countries => 'countryInfo.txt', :level => 10
-  def database(size = 5000)
+  def database()
     from = options['from']
     to = options['to']
     countries = options['countries']
@@ -90,12 +90,31 @@ class Geocoder < Thor
     puts "Inserting cities data (this could take a while)..."
     insert_cities(db, from, level, countries_ids)
     close_database(db)
+    puts "Compressing database..."
+    `gzip -9 < "#{options['to']}" > "#{options['to']}.gz"`
+  end
+  
+  desc "auxiliary", "Create the auxiliary files (Plist and Header)"
+  method_options :from => 'cities5000.txt', :to => 'geodata.sqlite', :level => 10
+  def auxiliary()
+    from = options['from']
+    to = options['to']
+    level = options['level']
+    
+    if !File.exists?(from)
+      puts "#{from} does not exist. It is required"
+      exit
+    end
+    
+    if !File.exists?(to)
+      puts "#{to} does not exist. It is required"
+      exit
+    end
+    
     puts "Creating metadata file..."
     create_plist_file(to, from, level)
     puts "Creating RGConfig.h file..."
     create_header_file(to, from, level)
-    puts "Compressing database..."
-    `gzip -9 < "#{options['to']}" > "#{options['to']}.gz"`
   end
   
 private
@@ -244,7 +263,7 @@ private
         }
     
     plist = CFPropertyList::List.new
-    plist.value = CFPropertyList.guess(data)
+    plist.value = CFPropertyList.guess(dict)
     plist.save(to + ".plist", CFPropertyList::List::FORMAT_BINARY)
   end
   

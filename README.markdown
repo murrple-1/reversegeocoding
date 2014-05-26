@@ -53,6 +53,7 @@ auxiliary files.
 
         $ thor geocoder:download all
         $ thor geocoder:database
+        $ thor geocoder:auxiliary
 
 Then in your application include the following files:
 
@@ -80,6 +81,8 @@ Credits
 =======
 
 Author: Daniel Rodríguez Troitiño (drodrigueztroitino thAT yahoo thOT es)
+
+Updated by Murray Christopherson (murraychristopherson thAT gmail thOT com)
 
 This project could not have been done without the free data provided by
 GeoNames <http://geonames.org>. GeoNames data is licensed under a Creative
