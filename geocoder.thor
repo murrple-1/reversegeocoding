@@ -18,10 +18,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-$KCODE='u'
-
-
-
 class Geocoder < Thor
   GEONAMES_DUMP_BASE_URL = 'http://download.geonames.org/export/dump/'
   GEONAMES_CITIES_BASE_NAME = 'cities%size%.zip'
@@ -38,7 +34,7 @@ class Geocoder < Thor
   
   DATABASE_SCHEMA_VERSION = 1
   
-  CODE_BASE_URL = "http://github.com/drodriguez/reversegeocoding/blob/master/%file%?raw=true"
+  CODE_BASE_URL = "https://raw.githubusercontent.com/murrple-1/reversegeocoding/master/%file%"
   RG_M_FILE = "RGReverseGeocoder.m"
   RG_H_FILE = "RGReverseGeocoder.h"
   RG_CONFIG_FILE = "RGConfig.h"
@@ -72,7 +68,7 @@ class Geocoder < Thor
     countries = options['countries']
     level = options['level']
     
-    require 'FasterCSV'
+    require 'csv'
     require 'sqlite3'
     
     puts "Creating database..."
@@ -191,7 +187,7 @@ private
       io.rewind unless io.read(3) == "\xef\xbb\xbf" # Skip UTF-8 marker
       io.readline while io.read(1) == '#' # Skip comments at the start of the file
       io.seek(-1, IO::SEEK_CUR) # Unread the last character that wasn't '#'
-      csv = FasterCSV.new(io, CSV_OPTIONS.merge(COUNTRIES_CSV_OPTIONS))
+      csv = CSV.new(io, CSV_OPTIONS.merge(COUNTRIES_CSV_OPTIONS))
       csv.each do |row|
         country_insert.execute :name => row['country']
         ids[row['ISO']] = db.last_insert_row_id
@@ -208,7 +204,7 @@ private
       io.rewind unless io.read(3) == "\xef\xbb\xbf" # Skip UTF-8 marker
       io.readline while io.read(1) == '#' # Skip comments at the start of the file
       io.seek(-1, IO::SEEK_CUR) # Unread the last character that wasn't '#'
-      csv = FasterCSV.new(io, CSV_OPTIONS.merge(CITIES_CSV_OPTIONS))
+      csv = CSV.new(io, CSV_OPTIONS.merge(CITIES_CSV_OPTIONS))
       csv.each do |row|
         country_id = countries_ids[row['country_code']]
         lon, lat = row['longitude'].to_f, row['latitude'].to_f
