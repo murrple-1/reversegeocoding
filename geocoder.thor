@@ -71,10 +71,12 @@ class Geocoder < Thor
     if !File.exists?(from)
       puts "#{from} does not exist. It is required for city data"
       exit
+    end
       
     if !File.exists?(countries)
       puts "#{countries} does not exist. It is required for country data"
       exit
+    end
     
     require 'csv'
     require 'sqlite3'
@@ -231,7 +233,7 @@ private
   end
   
   def create_plist_file(to, from, level)
-    require 'plist'
+    require 'cfpropertylist'
     
     db_version = File.mtime(from).strftime('%Y%m%d%H%M%S')
     schema_version = DATABASE_SCHEMA_VERSION
@@ -241,7 +243,9 @@ private
           "database_level" => "#{level}"
         }
     
-    Plist::Emit.save_plist(dict, to + ".plist")
+    plist = CFPropertyList::List.new
+    plist.value = CFPropertyList.guess(data)
+    plist.save(to + ".plist", CFPropertyList::List::FORMAT_BINARY)
   end
   
   def create_header_file(to, from, level)
