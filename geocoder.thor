@@ -68,6 +68,14 @@ class Geocoder < Thor
     countries = options['countries']
     level = options['level']
     
+    if !File.exists?(from)
+      puts "#{from} does not exist. It is required for city data"
+      exit
+      
+    if !File.exists?(countries)
+      puts "#{countries} does not exist. It is required for country data"
+      exit
+    
     require 'csv'
     require 'sqlite3'
     
