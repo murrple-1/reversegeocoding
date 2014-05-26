@@ -223,19 +223,17 @@ private
   end
   
   def create_plist_file(to, from, level)
+    require 'plist'
     
     db_version = File.mtime(from).strftime('%Y%m%d%H%M%S')
     schema_version = DATABASE_SCHEMA_VERSION
     
-    open(to + ".plist", 'wb') do |io|
-      io.write(<<-PLIST)
-      {
-        "database_version" = "#{db_version}";
-        "schema_version" = "#{schema_version}";
-        "database_level" = "#{level}";
-      }
-      PLIST
-    end
+    dict = {"database_version" : "#{db_version}",
+          "schema_version" : "#{schema_version}",
+          "database_level" : "#{level}"
+        }
+    
+    Plist::Emit.save_plist(dict, to + ".plist")
   end
   
   def create_header_file(to, from, level)
