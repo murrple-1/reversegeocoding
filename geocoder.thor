@@ -20,7 +20,6 @@
 
 class Geocoder < Thor
   GEONAMES_DUMP_BASE_URL = 'http://download.geonames.org/export/dump/'
-  GEONAMES_CITIES_BASE_NAME = 'cities%size%.zip'
   GEONAMES_COUNTRY_INFO = 'countryInfo.txt'
   
   CSV_OPTIONS = { :col_sep => "\t" }
@@ -39,20 +38,20 @@ class Geocoder < Thor
   RG_H_FILE = "RGReverseGeocoder.h"
   RG_CONFIG_FILE = "RGConfig.h"
   
-  desc "download all|code|cities|countries", "Download the code or the GeoNames database dump of the specified size. Possible sizes are 1000, 5000 and 15000."
-  method_options :size => 5000, :dest => :optional
+  desc "download all|code|cities|countries", "Download the code or the GeoNames database dump for the specified file. Possible files are cities1000.zip, cities5000.zip, cities15000.zip or allCountries.zip"
+  method_options :citiesFile => 'cities1000.zip', :dest => :optional
   def download(what)
     case what.downcase
     when 'code'
       download_code(options['dest'])
     when 'cities'
-      download_cities(options['size'], options['dest'])
+      download_cities(options['citiesFile'], options['dest'])
     when 'countries'
       download_countries(options['dest'])
     when 'all'
       download_cities(options['size'])
-      download_countries
-      download_code
+      download_countries()
+      download_code()
     else
       task = self.class.tasks['download']
       puts task.formatted_usage(self.class, false)
@@ -118,12 +117,10 @@ class Geocoder < Thor
   end
   
 private
-  def download_cities(size, dest = nil)
-    size = size.to_s
-    filename = GEONAMES_CITIES_BASE_NAME.gsub('%size%', size)
-    dest = dest.nil? ? filename : dest
-    dest = File.join(dest, filename) if File.directory?(dest)
-    download_url(GEONAMES_DUMP_BASE_URL + filename, dest)
+  def download_cities(citiesFile, dest = nil)
+    dest = dest.nil? ? citiesFile : dest
+    dest = File.join(dest, citiesFile) if File.directory?(dest)
+    download_url(GEONAMES_DUMP_BASE_URL + citiesFile, dest)
     `unzip -o "#{dest}" -d #{File.dirname(dest)}`
   end
   
@@ -235,6 +232,7 @@ private
       io.seek(-1, IO::SEEK_CUR) # Unread the last character that wasn't '#'
       csv = CSV.new(io, CSV_OPTIONS.merge(CITIES_CSV_OPTIONS))
       csv.each do |row|
+        next if denyRow? row
         country_id = countries_ids[row['country_code']]
         lon, lat = row['longitude'].to_f, row['latitude'].to_f
         x, y = sector_xy(lat, lon, level)
@@ -244,6 +242,15 @@ private
     end
     
     city_insert.close
+  end
+  
+  # any criteria for the entry should be entered here
+  def denyRow?(row)
+    feature_class = row['feature_class']
+    if feature_class != 'P'
+      return true
+    end
+    return false
   end
   
   def close_database(db)
