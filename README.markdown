@@ -77,6 +77,32 @@ And when you need to get a place from a location:
 If you need more help look at help from the Thor script, the documentation
 of the source code and the example project included in this Git repository.
 
+Advanced
+========
+
+If you have want of a complete database, you may want to use the options:
+
+        $ thor geocoder:download all --citiesFile allCountries.zip
+        $ thor geocoder:database --from allCountries.txt
+
+This will fill your database with every populated area in the world. Please note, this will take hours.
+
+Also, take a look at the `#denyRow?` function of the thor script (the ruby script is stored in `~/.thor`). It is the filter function for the rows. The provided implementation will filter for only 'P'-class areas. This is a common case, but if you have need of a different filtering, edit this method. If, for example, you wanted only coalfields in your database, you could rewrite the function as:
+
+```ruby
+def denyRow?(row)
+ feature_code = row['feature_code']
+ if feature_code != 'COLF'
+  return true
+ end
+ return false
+end
+```
+
+See `http://download.geonames.org/export/dump/readme.txt` for more information on the CSV fields.
+
+As an aside, if you are generating your own CSV's (for example, by piping to a new file from `grep`), make sure to change `#denyRow?` to always return false, so it doesn't further filter your results.
+
 Credits
 =======
 
