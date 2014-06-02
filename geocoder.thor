@@ -284,8 +284,10 @@ private
       csv = CSV.new(io, CSV_OPTIONS.merge(CITIES_CSV_OPTIONS))
       csv.each do |row|
         next if denyRow? row
-        country_id = countries_ids[row['country_code']]
-        admin1_id = admin1s_ids[row['country_code'] + "." + row['admin1_code']]
+        country_code = row['country_code']
+        admin1_code = row['admin1_code']
+        country_id = countries_ids[country_code]
+        admin1_id = admin1_code.nil? ? nil : admin1s_ids[country_code + "." + admin1_code]
         lon, lat = row['longitude'].to_f, row['latitude'].to_f
         x, y = sector_xy(lat, lon, level)
         sector = hilbert_distance(x, y, level)

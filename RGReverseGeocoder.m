@@ -341,8 +341,9 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2) {
   }
   
   NSMutableString *query = [[[NSMutableString alloc] init] autorelease];
-  [query appendString:@"SELECT cities.name, countries.name, latitude, longitude "
+    [query appendString:@"SELECT cities.name, countries.name, admin1s.name, latitude, longitude"
     "FROM cities JOIN countries ON cities.country_id = countries.id "
+    "JOIN admin1s ON cities.admin1_id = admin1s.id "
     "WHERE sector IN ("];
   BOOL first = YES;
   for(NSNumber *s in sectors) {
@@ -358,14 +359,14 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2) {
     return fallback;
   }
   
-  NSString *name = nil, *country = nil;
+    NSString *name = nil, *admin1_code = nil, *country = nil;
   double minDistance = MAX_DISTANCE_ON_EARTH;
 #if defined(DEBUG)
   double maxDistance = 0.0;
 #endif
   while (sqlite3_step(stmt) == SQLITE_ROW) {
-    double lat = sqlite3_column_double(stmt, 2);
-    double lon = sqlite3_column_double(stmt, 3);
+    double lat = sqlite3_column_double(stmt, 3);
+    double lon = sqlite3_column_double(stmt, 4);
     double distance = sphericalDistance(latitude, longitude,
                                         lat, lon);
     if (distance < minDistance) {
@@ -375,7 +376,6 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2) {
       if (text == nil) {
         RGLog(@"Row without name!?");
         sqlite3_finalize(stmt);
-        if (country) [country release];
         return fallback;
       }
       name = [NSString stringWithUTF8String:text];
@@ -384,10 +384,14 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2) {
       if (text == nil) {
         RGLog(@"Row without country!?");
         sqlite3_finalize(stmt);
-        if (name) [name release];
         return fallback;
       }
       country = [NSString stringWithUTF8String:text];
+      
+      text = (const char *)sqlite3_column_text(stmt, 2);
+      if (text != nil) {
+          admin1_code = [NSString stringWithUTF8String:text];
+      }
     }
 #if defined(DEBUG)
     if (distance > maxDistance) {
@@ -402,8 +406,12 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2) {
   RGLog(@"Maximun distance: %f", maxDistance);
 #endif
   
-  if (name != nil && country != nil) {
-    return [NSString stringWithFormat:@"%@, %@", name, country];
+  return [NSString stringWithFormat:@"%@, %@", name, country];
+    if(admin1_code != nil) {
+      return [NSString stringWithFormat:@"%@, %@, %@", name, admin1_code, country];
+    } else {
+      return [NSString stringWithFormat:@"%@, %@", name, country];
+    }
   } else {
     return fallback;
   }
