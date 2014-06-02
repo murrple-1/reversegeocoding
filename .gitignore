@@ -1,3 +1,5 @@
 build/
 *.mode1v3
 *.pbxuser
+ReverseGeocoding.xcodeproj/project.xcworkspace/xcuserdata
+ReverseGeocoding.xcodeproj/xcuserdata

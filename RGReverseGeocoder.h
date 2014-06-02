@@ -27,6 +27,8 @@
 #import <sqlite3.h>
 #import <CoreLocation/CoreLocation.h>
 
+@class RGLocation;
+
 /**
  * A RGReverseGeocoder looks for places given a coordinate pair.
  * It uses a database to find nearby places to the provider coordinate.
@@ -76,7 +78,7 @@
  * @return A string in the format "City, Country" or "latitude, longitude" if
  *         none found.
  */
-- (NSString *)placeForLocation:(CLLocation *)location;
+- (RGLocation *)placeForLocation:(CLLocation *)location;
 
 /**
  * Same as the placeForLocation: method, but using latitude and longitude.
@@ -84,7 +86,7 @@
  * @return A string in the format "City, Country" or "latitude, longitude" if
  *         none found.
  */
-- (NSString *)placeForLatitude:(double)latitude longitude:(double)longitude;
+- (RGLocation *)placeForLatitude:(double)latitude longitude:(double)longitude;
 
 /**
  * Setup the default database from the application resources.

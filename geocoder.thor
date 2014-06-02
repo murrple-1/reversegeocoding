@@ -38,8 +38,10 @@ class Geocoder < Thor
   DATABASE_SCHEMA_VERSION = 1
   
   CODE_BASE_URL = "https://raw.githubusercontent.com/murrple-1/reversegeocoding/master/%file%"
-  RG_M_FILE = "RGReverseGeocoder.m"
-  RG_H_FILE = "RGReverseGeocoder.h"
+  RG_LOCATION_M_FILE = "RGLocation.m"
+  RG_LOCATION_H_FILE = "RGLocation.h"
+  RG_REVERSEGEOCODER_M_FILE = "RGReverseGeocoder.m"
+  RG_REVERSEGEOCODER_H_FILE = "RGReverseGeocoder.h"
   RG_CONFIG_FILE = "RGConfig.h"
   
   desc "download all|code|cities|admin1s|countries", "Download the code or the GeoNames database dump for the specified file. Possible files are cities1000.zip, cities5000.zip, cities15000.zip or allCountries.zip"
@@ -153,8 +155,10 @@ private
   def download_code(dest = nil)
     dest = dest.nil? ? '.' : dest
     dest = File.dirname(dest) unless File.directory?(dest)
-    download_url(CODE_BASE_URL.gsub('%file%', RG_M_FILE), File.join(dest, RG_M_FILE))
-    download_url(CODE_BASE_URL.gsub('%file%', RG_H_FILE), File.join(dest, RG_H_FILE))
+    download_url(CODE_BASE_URL.gsub('%file%', RG_REVERSEGEOCODER_M_FILE), File.join(dest, RG_REVERSEGEOCODER_M_FILE))
+    download_url(CODE_BASE_URL.gsub('%file%', RG_REVERSEGEOCODER_H_FILE), File.join(dest, RG_REVERSEGEOCODER_H_FILE))
+    download_url(CODE_BASE_URL.gsub('%file%', RG_LOCATION_M_FILE), File.join(dest, RG_LOCATION_M_FILE))
+    download_url(CODE_BASE_URL.gsub('%file%', RG_LOCATION_H_FILE), File.join(dest, RG_LOCATION_H_FILE))
   end
   
   def download_url(url, dest)

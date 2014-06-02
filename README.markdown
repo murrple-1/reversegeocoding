@@ -57,6 +57,8 @@ auxiliary files.
 
 Then in your application include the following files:
 
+- <code>RGLocation.h</code>
+- <code>RGLocation.m</code>
 - <code>RGReverseGeocoder.h</code>
 - <code>RGReverseGeocoder.m</code>
 - <code>RGConfig.h</code>
