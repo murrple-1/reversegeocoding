@@ -21,11 +21,15 @@
 class Geocoder < Thor
   GEONAMES_DUMP_BASE_URL = 'http://download.geonames.org/export/dump/'
   GEONAMES_COUNTRY_INFO = 'countryInfo.txt'
+  GEONAMES_ADMIN1_INFO = 'admin1CodesASCII.txt'
   
   CSV_OPTIONS = { :col_sep => "\t" }
   CITIES_CSV_OPTIONS = {
     :headers => %w(geonameid name asciiname alternatenames latitude longitude feature_class feature_code country_code cc2 admin1_code admin2_code admin3_code admin4_code population elevation gtopo30 timezone modification_date),
     :quote_char => '$', # bogus character
+  }
+  ADMIN1_CSV_OPTIONS = {
+    :headers => %w(code name asciiname geonameid),
   }
   COUNTRIES_CSV_OPTIONS = {
     :headers => %w(ISO ISO3 ISO_numeric fips country capital area population continent tld currency_code currency_name phone postal_code_format postal_code_regex languages geonameid neighbours equivalent_fips_code),
@@ -38,7 +42,7 @@ class Geocoder < Thor
   RG_H_FILE = "RGReverseGeocoder.h"
   RG_CONFIG_FILE = "RGConfig.h"
   
-  desc "download all|code|cities|countries", "Download the code or the GeoNames database dump for the specified file. Possible files are cities1000.zip, cities5000.zip, cities15000.zip or allCountries.zip"
+  desc "download all|code|cities|admin1s|countries", "Download the code or the GeoNames database dump for the specified file. Possible files are cities1000.zip, cities5000.zip, cities15000.zip or allCountries.zip"
   method_options :citiesFile => 'cities1000.zip', :dest => :optional
   def download(what)
     case what.downcase
@@ -46,10 +50,13 @@ class Geocoder < Thor
       download_code(options['dest'])
     when 'cities'
       download_cities(options['citiesFile'], options['dest'])
+    when 'admin1s'
+      download_admin1s(options['dest'])
     when 'countries'
       download_countries(options['dest'])
     when 'all'
       download_cities(options['size'])
+      download_admin1s()
       download_countries()
       download_code()
     else
@@ -60,11 +67,12 @@ class Geocoder < Thor
   end
   
   desc "database", "Read GeoNames database dumps and transforms it into a SQLite database."
-  method_options :from => 'cities5000.txt', :to => 'geodata.sqlite', :countries => 'countryInfo.txt', :level => 10
+  method_options :from => 'cities5000.txt', :to => 'geodata.sqlite', :countries => 'countryInfo.txt', :admin1s => 'admin1CodesASCII.txt', :level => 10
   def database()
     from = options['from']
     to = options['to']
     countries = options['countries']
+    admin1s = options['admin1s']
     level = options['level']
     
     if !File.exists?(from)
@@ -82,12 +90,16 @@ class Geocoder < Thor
     
     puts "Creating database..."
     db = create_database(to)
+#   db = get_database(to)
     create_countries_table(db)
+    create_admin1s_table(db)
     create_cities_table(db)
     puts "Inserting countries data..."
     countries_ids = insert_countries(db, countries)
+    puts "Inserting admin1s data..."
+    admin1s_ids = insert_admin1s(db, admin1s)
     puts "Inserting cities data (this could take a while)..."
-    insert_cities(db, from, level, countries_ids)
+    insert_cities(db, from, level, countries_ids, admin1s_ids)
     close_database(db)
     puts "Compressing database..."
     `gzip -9 < "#{options['to']}" > "#{options['to']}.gz"`
@@ -122,6 +134,13 @@ private
     dest = File.join(dest, citiesFile) if File.directory?(dest)
     download_url(GEONAMES_DUMP_BASE_URL + citiesFile, dest)
     `unzip -o "#{dest}" -d #{File.dirname(dest)}`
+  end
+  
+  def download_admin1s(dest = nil)
+    filename = GEONAMES_ADMIN1_INFO
+    dest = dest.nil? ? filename : dest
+    dest = File.join(dest.filename) if File.directory?(dest)
+    download_url(GEONAMES_DUMP_BASE_URL + filename, dest)
   end
   
   def download_countries(dest = nil)
@@ -183,9 +202,22 @@ private
     SQLite3::Database.new(to)
   end
   
+  def get_database(to)
+    SQLite3::Database.new(to)
+  end
+  
   def create_countries_table(db)
     db.execute(<<-SQL)
     CREATE TABLE countries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT
+    )
+    SQL
+  end
+  
+  def create_admin1s_table(db)
+    db.execute(<<-SQL)
+    CREATE TABLE admin1s (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT
     )
@@ -200,7 +232,8 @@ private
       latitude REAL NOT NULL,
       longitude REAL NOT NULL,
       sector INTEGER NOT NULL,
-      country_id INTEGER NOT NULL
+      country_id INTEGER NOT NULL,
+      admin1_id INTEGER
     )
     SQL
     db.execute("CREATE INDEX IF NOT EXISTS cities_sector_idx ON cities (sector)")
@@ -224,8 +257,26 @@ private
     ids
   end
   
-  def insert_cities(db, from, level, countries_ids)
-    city_insert = db.prepare("INSERT INTO cities (name, latitude, longitude, sector, country_id) VALUES (:name, :latitude, :longitude, :sector, :country_id)")
+  def insert_admin1s(db, admin1s)
+    ids = Hash.new
+    admin1_insert = db.prepare("INSERT INTO admin1s (name) VALUES (:name)")
+    open(admin1s, 'rb') do |io|
+      io.rewind unless io.read(3) == "\xef\xbb\xbf" # Skip UTF-8 marker
+      io.readline while io.read(1) == '#' # Skip comments at the start of the file
+      io.seek(-1, IO::SEEK_CUR) # Unread the last character that wasn't '#'
+      csv = CSV.new(io, CSV_OPTIONS.merge(ADMIN1_CSV_OPTIONS))
+      csv.each do |row|
+        admin1_insert.execute :name => row['name']
+        ids[row['code']] = db.last_insert_row_id
+      end
+    end
+    admin1_insert.close
+    
+    ids
+  end
+  
+  def insert_cities(db, from, level, countries_ids, admin1s_ids)
+    city_insert = db.prepare("INSERT INTO cities (name, latitude, longitude, sector, country_id, admin1_id) VALUES (:name, :latitude, :longitude, :sector, :country_id, :admin1_id)")
     open(from, 'rb') do |io|
       io.rewind unless io.read(3) == "\xef\xbb\xbf" # Skip UTF-8 marker
       io.readline while io.read(1) == '#' # Skip comments at the start of the file
@@ -234,10 +285,11 @@ private
       csv.each do |row|
         next if denyRow? row
         country_id = countries_ids[row['country_code']]
+        admin1_id = admin1s_ids[row['country_code'] + "." + row['admin1_code']]
         lon, lat = row['longitude'].to_f, row['latitude'].to_f
         x, y = sector_xy(lat, lon, level)
         sector = hilbert_distance(x, y, level)
-        city_insert.execute :name => row['name'], :latitude => lat, :longitude => lon, :country_id => country_id, :sector => sector
+        city_insert.execute :name => row['name'], :latitude => lat, :longitude => lon, :country_id => country_id, :admin1_id => admin1_id, :sector => sector
       end
     end
     
