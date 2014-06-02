@@ -265,8 +265,8 @@ private
     schema_version = DATABASE_SCHEMA_VERSION
     
     dict = {"database_version" => "#{db_version}",
-          "schema_version" => "#{schema_version}",
-          "database_level" => "#{level}"
+          "schema_version" => schema_version,
+          "database_level" => level
         }
     
     plist = CFPropertyList::List.new
