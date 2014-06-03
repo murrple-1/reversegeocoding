@@ -23,6 +23,8 @@ class Geocoder < Thor
   GEONAMES_COUNTRY_INFO = 'countryInfo.txt'
   GEONAMES_ADMIN1_INFO = 'admin1CodesASCII.txt'
   
+  DEFAULT_LOCALE = 'en_US'
+  
   CSV_OPTIONS = { :col_sep => "\t" }
   CITIES_CSV_OPTIONS = {
     :headers => %w(geonameid name asciiname alternatenames latitude longitude feature_class feature_code country_code cc2 admin1_code admin2_code admin3_code admin4_code population elevation gtopo30 timezone modification_date),
@@ -93,6 +95,7 @@ class Geocoder < Thor
     puts "Creating database..."
     db = create_database(to)
 #   db = get_database(to)
+	create_localize_table(db)
     create_countries_table(db)
     create_admin1s_table(db)
     create_cities_table(db)
@@ -210,11 +213,22 @@ private
     SQLite3::Database.new(to)
   end
   
+  def create_localize_table(db)
+  	db.execute(<<-SQL)
+  	CREATE TABLE localize (
+  		text TEXT,
+  		locale TEXT,
+  		localizedText TEXT NOT NULL,
+  		PRIMARY KEY (text, locale)
+  	)
+  	SQL
+  end
+  
   def create_countries_table(db)
     db.execute(<<-SQL)
     CREATE TABLE countries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT
+      name TEXT NOT NULL
     )
     SQL
   end
@@ -223,7 +237,7 @@ private
     db.execute(<<-SQL)
     CREATE TABLE admin1s (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT
+      name TEXT NOT NULL
     )
     SQL
   end
@@ -232,7 +246,7 @@ private
     db.execute(<<-SQL)
     CREATE TABLE cities (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
+      name TEXT NOT NULL,
       latitude REAL NOT NULL,
       longitude REAL NOT NULL,
       sector INTEGER NOT NULL,
