@@ -360,11 +360,9 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
 
 - (RGLocation *)placeForLatitude:(double)latitude longitude:(double)longitude withLocale:(NSString *)locale
 {
-    RGLocation *retVal = [[[RGLocation alloc] init] autorelease];
-
     int row = [self sectorFromCoordinate:latitude];
     int col = [self sectorFromCoordinate:longitude];
-
+    
     // Get the eight sectors around the central one
     NSMutableArray *sectors = [[[NSMutableArray alloc] init] autorelease];
     int sector;
@@ -372,7 +370,8 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
     {
         for (int j = -1; j <= 1; j++)
         {
-            if (row + i < 0 || row + i >= mapDimension_ || col + j < 0 || col + j >= mapDimension_)
+            if (row + i < 0 || row + i >= mapDimension_ || col + j < 0 ||
+                col + j >= mapDimension_)
             {
                 continue;
             }
@@ -381,12 +380,13 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
             [sectors addObject:[NSNumber numberWithInt:sector]];
         }
     }
-
+    
     NSMutableString *query = [[[NSMutableString alloc] init] autorelease];
-    [query appendString:@"SELECT cities.name, countries.name, admin1s.name"
-                         "FROM cities JOIN countries ON cities.country_id = countries.id "
-                         "JOIN admin1s ON cities.admin1_id = admin1s.id "
-                         "WHERE sector IN ("];
+    [query appendString:
+     @"SELECT cities.name, countries.name, admin1s.name, cities.latitude, cities.longitude "
+     "FROM cities JOIN countries ON cities.country_id = countries.id "
+     "JOIN admin1s ON cities.admin1_id = admin1s.id "
+     "WHERE cities.sector IN ("];
     BOOL first = YES;
     for (NSNumber *s in sectors)
     {
@@ -394,33 +394,45 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
         first = NO;
     }
     [query appendString:@")"];
-
+    
     sqlite3 *db = self.database;
     sqlite3_stmt *stmt;
-    if (sqlite3_prepare_v2(db, [query UTF8String], -1, &stmt, NULL) != SQLITE_OK)
+    if (sqlite3_prepare_v2(db, [query UTF8String], -1, &stmt, NULL) !=
+        SQLITE_OK)
     {
-        RGLog(@"Can not prepare SQlite statement with error '%s'.", sqlite3_errmsg(db));
-        return retVal;
+        RGLog(@"Can not prepare SQlite statement with error '%s'.",
+              sqlite3_errmsg(db));
+        return nil;
     }
-
+    double minDistance = MAX_DISTANCE_ON_EARTH;
+    RGLocation *retVal = nil;
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        const char *text = (const char *)sqlite3_column_text(stmt, 0);
-        if (text != NULL)
+        double lat = sqlite3_column_double(stmt, 3);
+        double lon = sqlite3_column_double(stmt, 4);
+        double distance = sphericalDistance(latitude, longitude,
+                                            lat, lon);
+        if (distance < minDistance)
         {
-            retVal.city = [NSString stringWithUTF8String:text];
-        }
-
-        text = (const char *)sqlite3_column_text(stmt, 1);
-        if (text != NULL)
-        {
-            retVal.country = [NSString stringWithUTF8String:text];
-        }
-
-        text = (const char *)sqlite3_column_text(stmt, 2);
-        if (text != NULL)
-        {
-            retVal.admin1 = [NSString stringWithUTF8String:text];
+            retVal = [[[RGLocation alloc] init] autorelease];
+            minDistance = distance;
+            const char *text = (const char *)sqlite3_column_text(stmt, 0);
+            if (text != NULL)
+            {
+                retVal.city = [NSString stringWithUTF8String:text];
+            }
+            
+            text = (const char *)sqlite3_column_text(stmt, 1);
+            if (text != NULL)
+            {
+                retVal.country = [NSString stringWithUTF8String:text];
+            }
+            
+            text = (const char *)sqlite3_column_text(stmt, 2);
+            if (text != NULL)
+            {
+                retVal.admin1 = [NSString stringWithUTF8String:text];
+            }
         }
     }
     sqlite3_finalize(stmt);
