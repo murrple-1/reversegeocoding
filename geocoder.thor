@@ -285,10 +285,8 @@ private
       csv = CSV.new(io, CSV_OPTIONS.merge(ADMIN1_CSV_OPTIONS))
       csv.each do |row|
       	name = row['name']
-      	if name.nil?
-      		continue
-      	end
-        admin1_insert.execute :name => row['name']
+      	next if name.nil?
+        admin1_insert.execute :name => name
         ids[row['code']] = db.last_insert_row_id
       end
     end
