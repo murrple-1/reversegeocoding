@@ -384,7 +384,8 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
     NSMutableString *query = [[[NSMutableString alloc] init] autorelease];
     [query appendString:
      @"SELECT cities.name, countries.name, admin1s.name, cities.latitude, cities.longitude "
-     "FROM cities JOIN countries ON cities.country_id = countries.id "
+     "FROM cities "
+     "JOIN countries ON cities.country_id = countries.id "
      "JOIN admin1s ON cities.admin1_id = admin1s.id "
      "WHERE cities.sector IN ("];
     BOOL first = YES;
@@ -436,7 +437,47 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
         }
     }
     sqlite3_finalize(stmt);
+    
+    retVal.city = [RGReverseGeocoder localizedString:retVal.city locale:locale db:db];
+    retVal.country = [RGReverseGeocoder localizedString:retVal.country locale:locale db:db];
+    retVal.admin1 = [RGReverseGeocoder localizedString:retVal.admin1 locale:locale db:db];
+    
     return retVal;
+}
+
++(NSString *)localizedString:(NSString *)text locale:(NSString *)locale db:(sqlite3 *)db
+{
+    if(locale && text)
+    {
+        NSString *query = @"SELECT localizedText FROM localize WHERE text = ? AND locale = ?";
+        sqlite3_stmt *stmt;
+        if (sqlite3_prepare_v2(db, [query UTF8String], -1, &stmt, NULL) != SQLITE_OK)
+        {
+            return text;
+        }
+        if(sqlite3_bind_text(stmt, 0, [text UTF8String], -1, NULL) != SQLITE_OK)
+        {
+            sqlite3_finalize(stmt);
+            return text;
+        }
+        if(sqlite3_bind_text(stmt, 1, [locale UTF8String], -1, NULL) != SQLITE_OK)
+        {
+            sqlite3_finalize(stmt);
+            return text;
+        }
+        const char *t = NULL;
+        if(sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            t = (const char *)sqlite3_column_text(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+        if(t != NULL)
+        {
+            return [NSString stringWithUTF8String:t];
+        }
+        
+    }
+    return text;
 }
 
 - (void)setLevel:(int)newLevel
