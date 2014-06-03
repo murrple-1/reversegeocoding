@@ -78,7 +78,7 @@
  * @return A string in the format "City, Country" or "latitude, longitude" if
  *         none found.
  */
-- (RGLocation *)placeForLocation:(CLLocation *)location;
+- (RGLocation *)placeForLocation:(CLLocation *)location withLocale:(NSString *)locale;
 
 /**
  * Same as the placeForLocation: method, but using latitude and longitude.
@@ -86,7 +86,7 @@
  * @return A string in the format "City, Country" or "latitude, longitude" if
  *         none found.
  */
-- (RGLocation *)placeForLatitude:(double)latitude longitude:(double)longitude;
+- (RGLocation *)placeForLatitude:(double)latitude longitude:(double)longitude withLocale:(NSString *)locale;
 
 /**
  * Setup the default database from the application resources.
