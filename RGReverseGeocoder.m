@@ -396,86 +396,88 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
     }
     [query appendString:@")"];
     
-    sqlite3 *db = self.database;
-    sqlite3_stmt *stmt;
-    if (sqlite3_prepare_v2(db, [query UTF8String], -1, &stmt, NULL) !=
-        SQLITE_OK)
+    @synchronized(self)
     {
-        RGLog(@"Can not prepare SQlite statement with error '%s'.",
-              sqlite3_errmsg(db));
-        return nil;
-    }
-    double minDistance = MAX_DISTANCE_ON_EARTH;
-    RGLocation *retVal = nil;
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        double lat = sqlite3_column_double(stmt, 3);
-        double lon = sqlite3_column_double(stmt, 4);
-        double distance = sphericalDistance(latitude, longitude,
-                                            lat, lon);
-        if (distance < minDistance)
+        sqlite3 *db = self.database;
+        sqlite3_stmt *stmt;
+        if (sqlite3_prepare_v2(db, [query UTF8String], -1, &stmt, NULL) !=
+            SQLITE_OK)
         {
-            retVal = [[[RGLocation alloc] init] autorelease];
-            minDistance = distance;
-            const char *text = (const char *)sqlite3_column_text(stmt, 0);
-            if (text != NULL)
+            RGLog(@"Can not prepare SQlite statement with error '%s'.",
+                  sqlite3_errmsg(db));
+            return nil;
+        }
+        double minDistance = MAX_DISTANCE_ON_EARTH;
+        RGLocation *retVal = nil;
+        while (sqlite3_step(stmt) == SQLITE_ROW)
+        {
+            double lat = sqlite3_column_double(stmt, 3);
+            double lon = sqlite3_column_double(stmt, 4);
+            double distance = sphericalDistance(latitude, longitude,
+                                                lat, lon);
+            if (distance < minDistance)
             {
-                retVal.city = [NSString stringWithUTF8String:text];
-            }
-            
-            text = (const char *)sqlite3_column_text(stmt, 1);
-            if (text != NULL)
-            {
-                retVal.country = [NSString stringWithUTF8String:text];
-            }
-            
-            text = (const char *)sqlite3_column_text(stmt, 2);
-            if (text != NULL)
-            {
-                retVal.admin1 = [NSString stringWithUTF8String:text];
+                retVal = [[[RGLocation alloc] init] autorelease];
+                minDistance = distance;
+                const char *text = (const char *)sqlite3_column_text(stmt, 0);
+                if (text != NULL)
+                {
+                    retVal.city = [NSString stringWithUTF8String:text];
+                }
+                
+                text = (const char *)sqlite3_column_text(stmt, 1);
+                if (text != NULL)
+                {
+                    retVal.country = [NSString stringWithUTF8String:text];
+                }
+                
+                text = (const char *)sqlite3_column_text(stmt, 2);
+                if (text != NULL)
+                {
+                    retVal.admin1 = [NSString stringWithUTF8String:text];
+                }
             }
         }
+        sqlite3_finalize(stmt);
+        return retVal;
     }
-    sqlite3_finalize(stmt);
-    
-    retVal.city = [RGReverseGeocoder localizedString:retVal.city locale:locale db:db];
-    retVal.country = [RGReverseGeocoder localizedString:retVal.country locale:locale db:db];
-    retVal.admin1 = [RGReverseGeocoder localizedString:retVal.admin1 locale:locale db:db];
-    
-    return retVal;
 }
 
-+(NSString *)localizedString:(NSString *)text locale:(NSString *)locale db:(sqlite3 *)db
+- (NSString *)localizedString:(NSString *)text locale:(NSString *)locale
 {
     if(locale && text)
     {
         NSString *query = @"SELECT localizedText FROM localize WHERE text = ? AND locale = ?";
-        sqlite3_stmt *stmt;
-        if (sqlite3_prepare_v2(db, [query UTF8String], -1, &stmt, NULL) != SQLITE_OK)
-        {
-            return text;
-        }
-        if(sqlite3_bind_text(stmt, 0, [text UTF8String], -1, NULL) != SQLITE_OK)
-        {
-            sqlite3_finalize(stmt);
-            return text;
-        }
-        if(sqlite3_bind_text(stmt, 1, [locale UTF8String], -1, NULL) != SQLITE_OK)
-        {
-            sqlite3_finalize(stmt);
-            return text;
-        }
-        const char *t = NULL;
-        if(sqlite3_step(stmt) == SQLITE_ROW)
-        {
-            t = (const char *)sqlite3_column_text(stmt, 0);
-        }
-        sqlite3_finalize(stmt);
-        if(t != NULL)
-        {
-            return [NSString stringWithUTF8String:t];
-        }
         
+        @synchronized(self)
+        {
+            sqlite3 *db = self.database;
+            sqlite3_stmt *stmt;
+            if (sqlite3_prepare_v2(db, [query UTF8String], -1, &stmt, NULL) != SQLITE_OK)
+            {
+                return text;
+            }
+            if(sqlite3_bind_text(stmt, 0, [text UTF8String], -1, NULL) != SQLITE_OK)
+            {
+                sqlite3_finalize(stmt);
+                return text;
+            }
+            if(sqlite3_bind_text(stmt, 1, [locale UTF8String], -1, NULL) != SQLITE_OK)
+            {
+                sqlite3_finalize(stmt);
+                return text;
+            }
+            const char *t = NULL;
+            if(sqlite3_step(stmt) == SQLITE_ROW)
+            {
+                t = (const char *)sqlite3_column_text(stmt, 0);
+            }
+            sqlite3_finalize(stmt);
+            if(t != NULL)
+            {
+                return [NSString stringWithUTF8String:t];
+            }
+        }
     }
     return text;
 }

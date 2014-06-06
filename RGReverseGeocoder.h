@@ -89,6 +89,13 @@
 - (RGLocation *)placeForLatitude:(double)latitude longitude:(double)longitude withLocale:(NSString *)locale;
 
 /**
+ * Returns a localized version of the string, based on the locale.
+ *
+ * @returns A localized string, if one is found, or the original text, if one is not found, or locale == nil
+ */
+- (NSString *)localizedString:(NSString *)text locale:(NSString *)locale;
+
+/**
  * Setup the default database from the application resources.
  * This message will copy the compressed database in the application bundle into
  * its uncompressed default location if it is not already there or is not the
