@@ -237,7 +237,8 @@ private
     db.execute(<<-SQL)
     CREATE TABLE admin1s (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL
+      name TEXT NOT NULL,
+      code TEXT NOT NULL
     )
     SQL
   end
@@ -277,7 +278,7 @@ private
   
   def insert_admin1s(db, admin1s)
     ids = Hash.new
-    admin1_insert = db.prepare("INSERT INTO admin1s (name) VALUES (:name)")
+    admin1_insert = db.prepare("INSERT INTO admin1s (name, code) VALUES (:name, :code)")
     open(admin1s, 'rb') do |io|
       io.rewind unless io.read(3) == "\xef\xbb\xbf" # Skip UTF-8 marker
       io.readline while io.read(1) == '#' # Skip comments at the start of the file
@@ -285,8 +286,9 @@ private
       csv = CSV.new(io, CSV_OPTIONS.merge(ADMIN1_CSV_OPTIONS))
       csv.each do |row|
       	name = row['name']
-      	next if name.nil?
-        admin1_insert.execute :name => name
+      	code = row['code']
+      	next if name.nil? || code.nil?
+        admin1_insert.execute :name => name, :code => code
         ids[row['code']] = db.last_insert_row_id
       end
     end
