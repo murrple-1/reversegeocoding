@@ -383,7 +383,7 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
     
     NSMutableString *query = [[[NSMutableString alloc] init] autorelease];
     [query appendString:
-     @"SELECT cities.name, countries.name, admin1s.name, cities.latitude, cities.longitude "
+     @"SELECT cities.name, countries.name, admin1s.name, admin1s.code, cities.latitude, cities.longitude "
      "FROM cities "
      "JOIN countries ON cities.country_id = countries.id "
      "JOIN admin1s ON cities.admin1_id = admin1s.id "
@@ -411,8 +411,8 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
         RGLocation *retVal = nil;
         while (sqlite3_step(stmt) == SQLITE_ROW)
         {
-            double lat = sqlite3_column_double(stmt, 3);
-            double lon = sqlite3_column_double(stmt, 4);
+            double lat = sqlite3_column_double(stmt, 4);
+            double lon = sqlite3_column_double(stmt, 5);
             double distance = sphericalDistance(latitude, longitude,
                                                 lat, lon);
             if (distance < minDistance)
@@ -435,6 +435,12 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
                 if (text != NULL)
                 {
                     retVal.admin1 = [NSString stringWithUTF8String:text];
+                }
+                
+                text = (const char *)sqlite3_column_text(stmt, 3);
+                if (text != NULL)
+                {
+                    retVal.admin1Code = [NSString stringWithUTF8String:text];
                 }
             }
         }

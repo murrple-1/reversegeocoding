@@ -29,6 +29,7 @@
 
 @property (nonatomic, retain, readwrite) NSString *country;
 @property (nonatomic, retain, readwrite) NSString *admin1;
+@property (nonatomic, retain, readwrite) NSString *admin1Code;
 @property (nonatomic, retain, readwrite) NSString *city;
 
 @end
