@@ -105,6 +105,28 @@ See `http://download.geonames.org/export/dump/readme.txt` for more information o
 
 As an aside, if you are generating your own CSV's (for example, by piping to a new file from `grep`), make sure to change `#denyRow?` to always return false, so it doesn't further filter your results.
 
+---
+
+For anyone interested as well, I have provided a SQL script that adds the more common abbreviations of the USA states and Canada provinces to the `localize` table, after the database has been built. This was useful for me in my projects, but won't be useful for everyone. To use it, run:
+
+        $ sqlite3 geodata.sqlite
+
+Then, within the sqlite3 command line, run:
+
+        > .read US_States_CA_Provinces.sql
+
+Lastly, re-compress the database using:
+
+        $ gzip -9 < geodata.sqlite > geodata.sqlite.gz
+
+It's usage in the code is then:
+
+```objc
+CILocation *location = ...
+RGLocation *place = [[RGReverseGeocoder sharedGeocoder] placeForLocation:location];
+NSString *stateAbbreviation = [[RGReverseGeocoder sharedGeocoder] localizedString:place.admin1Code locale:@""];
+```
+
 Credits
 =======
 

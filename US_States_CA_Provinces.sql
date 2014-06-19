@@ -1,3 +1,6 @@
+-- This may be a useful file if you want to convert from the geonames.org representation
+-- of admin1_code's to more recognizable abbreviations of USA states and Canada provinces
+
 BEGIN;
 INSERT INTO localize (text, locale, localizedText) VALUES ('CA.01','','AB');
 INSERT INTO localize (text, locale, localizedText) VALUES ('CA.02','','BC');
