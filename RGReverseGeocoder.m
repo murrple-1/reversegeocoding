@@ -461,17 +461,17 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
             sqlite3_stmt *stmt;
             if (sqlite3_prepare_v2(db, [query UTF8String], -1, &stmt, NULL) != SQLITE_OK)
             {
-                return text;
+                return nil;
             }
             if(sqlite3_bind_text(stmt, 0, [text UTF8String], -1, NULL) != SQLITE_OK)
             {
                 sqlite3_finalize(stmt);
-                return text;
+                return nil;
             }
             if(sqlite3_bind_text(stmt, 1, [locale UTF8String], -1, NULL) != SQLITE_OK)
             {
                 sqlite3_finalize(stmt);
-                return text;
+                return nil;
             }
             const char *t = NULL;
             if(sqlite3_step(stmt) == SQLITE_ROW)
@@ -485,7 +485,7 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
             }
         }
     }
-    return text;
+    return nil;
 }
 
 - (void)setLevel:(int)newLevel

@@ -91,7 +91,7 @@
 /**
  * Returns a localized version of the string, based on the locale.
  *
- * @returns A localized string, if one is found, or the original text, if one is not found, or locale == nil
+ * @returns A localized string, if one is found, or nil
  */
 - (NSString *)localizedString:(NSString *)text locale:(NSString *)locale;
 
