@@ -351,14 +351,13 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
     return self;
 }
 
-- (RGLocation *)placeForLocation:(CLLocation *)location withLocale:(NSString *)locale
+- (RGLocation *)placeForLocation:(CLLocation *)location
 {
     return [self placeForLatitude:location.coordinate.latitude
-                        longitude:location.coordinate.longitude
-                       withLocale:locale];
+                        longitude:location.coordinate.longitude];
 }
 
-- (RGLocation *)placeForLatitude:(double)latitude longitude:(double)longitude withLocale:(NSString *)locale
+- (RGLocation *)placeForLatitude:(double)latitude longitude:(double)longitude
 {
     int row = [self sectorFromCoordinate:latitude];
     int col = [self sectorFromCoordinate:longitude];
@@ -463,26 +462,28 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
             {
                 return nil;
             }
-            if(sqlite3_bind_text(stmt, 0, [text UTF8String], -1, NULL) != SQLITE_OK)
+            if(sqlite3_bind_text(stmt, 1, [text UTF8String], -1, NULL) != SQLITE_OK)
             {
                 sqlite3_finalize(stmt);
                 return nil;
             }
-            if(sqlite3_bind_text(stmt, 1, [locale UTF8String], -1, NULL) != SQLITE_OK)
+            if(sqlite3_bind_text(stmt, 2, [locale UTF8String], -1, NULL) != SQLITE_OK)
             {
                 sqlite3_finalize(stmt);
                 return nil;
             }
             const char *t = NULL;
+            NSString *tStr = nil;
             if(sqlite3_step(stmt) == SQLITE_ROW)
             {
                 t = (const char *)sqlite3_column_text(stmt, 0);
             }
-            sqlite3_finalize(stmt);
             if(t != NULL)
             {
-                return [NSString stringWithUTF8String:t];
+                tStr = [NSString stringWithUTF8String:t];
             }
+            sqlite3_finalize(stmt);
+            return tStr;
         }
     }
     return nil;
