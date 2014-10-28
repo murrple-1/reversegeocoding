@@ -83,21 +83,21 @@ static RGReverseGeocoder *sharedInstance = nil;
 
 /**
  * Returns the path of the default database file.
- * This path is <NSDocumentDirectory>/geodata.sqlite.
  */
-NSString *defaultDatabaseFile()
+NSURL * defaultDatabaseFile()
 {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-
-    if ([paths count] == 0)
+    NSArray *paths = [[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
+    NSURL *cacheDir = [[paths lastObject] URLByAppendingPathComponent:@"com.rgreversegeocoder"];
+    if(![[NSFileManager defaultManager] fileExistsAtPath:[cacheDir path]])
     {
-        RGLogX(@"Application Support directory in User Domain not found.");
-        return nil;
+        NSError *error = nil;
+        if(![[NSFileManager defaultManager] createDirectoryAtURL:cacheDir withIntermediateDirectories:YES attributes:nil error:&error] ||
+           ![cacheDir setResourceValue:@(YES) forKey:NSURLIsExcludedFromBackupKey error:&error])
+        {
+            return nil;
+        }
     }
-
-    NSString *defaultPath = [[paths objectAtIndex:0]
-        stringByAppendingPathComponent:DATABASE_FILENAME];
-
+    NSURL *defaultPath = [cacheDir URLByAppendingPathComponent:DATABASE_FILENAME];
     return defaultPath;
 }
 
@@ -286,7 +286,7 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
         return NO;
     }
 
-    NSString *dbDestPath = defaultDatabaseFile();
+    NSString *dbDestPath = [defaultDatabaseFile() path];
     if (!dbDestPath)
     {
         RGLog(@"Can not find application support directory");
@@ -502,7 +502,7 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
 
 - (id)init
 {
-    return [self initWithDatabase:defaultDatabaseFile()];
+    return [self initWithDatabase:[defaultDatabaseFile() path]];
 }
 
 - (BOOL)checkDatabaseMetadata
