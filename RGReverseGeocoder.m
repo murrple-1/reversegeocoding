@@ -200,12 +200,11 @@ BOOL decompressFile(NSString *origFile, NSString *destFile)
 
         if (outFile)
         {
-            int writeLen = [outFile write:(const uint8_t *)buffer
+            NSInteger writeLen = [outFile write:(const uint8_t *)buffer
                                 maxLength:readLen];
             if (writeLen < readLen)
             {
-                RGLog("Write error decompressing data with error (%d) '%@'",
-                      [[outFile streamError] code], [[outFile streamError] description]);
+                RGLog("Write error decompressing data with error (%ld) '%@'", (long)[[outFile streamError] code], [[outFile streamError] description]);
                 break;
             }
         }
@@ -305,8 +304,8 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
             if (![fileManager removeItemAtPath:plistDestPath
                                          error:&error])
             {
-                RGLog(@"'%@' already exist and can not be removed with error (%d) '%@'",
-                      plistDestPath, [error code], [error description]);
+                RGLog(@"'%@' already exist and can not be removed with error (%ld) '%@'",
+                      plistDestPath, (long)[error code], [error description]);
                 return NO;
             }
         }
@@ -315,8 +314,7 @@ double sphericalDistance(double lat1, double lon1, double lat2, double lon2)
                                   toPath:plistDestPath
                                    error:&error])
         {
-            RGLog(@"Can not copy metadata file with error (%d) '%@'",
-                  [error code], [error description]);
+            RGLog(@"Can not copy metadata file with error (%ld) '%@'", (long)[error code], [error description]);
             return NO;
         }
 
