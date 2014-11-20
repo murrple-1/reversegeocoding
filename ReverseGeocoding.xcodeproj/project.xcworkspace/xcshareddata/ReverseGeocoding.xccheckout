@@ -10,29 +10,29 @@
 	<string>ReverseGeocoding</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>17E302B2-8908-4D1E-8EC0-1A1C664CA495</key>
+		<key>0F7EF70CBB369BB83CF123F91A4A16E0B60E05B5</key>
 		<string>https://github.com/murrple-1/reversegeocoding.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>ReverseGeocoding.xcodeproj/project.xcworkspace</string>
+	<string>ReverseGeocoding.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>17E302B2-8908-4D1E-8EC0-1A1C664CA495</key>
+		<key>0F7EF70CBB369BB83CF123F91A4A16E0B60E05B5</key>
 		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>https://github.com/murrple-1/reversegeocoding.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>17E302B2-8908-4D1E-8EC0-1A1C664CA495</string>
+	<string>0F7EF70CBB369BB83CF123F91A4A16E0B60E05B5</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>17E302B2-8908-4D1E-8EC0-1A1C664CA495</string>
+			<string>0F7EF70CBB369BB83CF123F91A4A16E0B60E05B5</string>
 			<key>IDESourceControlWCCName</key>
 			<string>reversegeocoding</string>
 		</dict>
